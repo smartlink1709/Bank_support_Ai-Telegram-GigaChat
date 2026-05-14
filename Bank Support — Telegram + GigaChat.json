@@ -1,0 +1,458 @@
+{
+  "name": "Bank Support — Telegram + GigaChat",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "id": "a164eb4f-cb96-4555-b3b1-cbd35f9d3fb4",
+      "name": "01 Telegram Trigger",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -208,
+        16
+      ],
+      "webhookId": "8657d507-457a-4ef4-afe8-50281d3dde27",
+      "credentials": {
+        "telegramApi": {
+          "id": "SzweVMNUrk9Y6Yc2",
+          "name": "Telegram account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $input.first().json;\nconst msg = raw.message;\nconst chatId = msg?.chat?.id;\nconst userText = typeof msg?.text === \"string\" ? msg.text.trim() : \"\";\nconst hasText = userText.length > 0;\nreturn [{\n  json: {\n    rqUid: $execution.id,\n    chatId,\n    userText,\n    hasText\n  }\n}];"
+      },
+      "id": "601f9b08-d3bf-4e7c-a7dc-d1820e47edda",
+      "name": "02 Prepare Input",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        16,
+        16
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "cond-has-text",
+              "leftValue": "={{ $json.hasText }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "7865e95b-414f-4ab6-b06b-8825a9cb43db",
+      "name": "03 Validate Text",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        240,
+        16
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "cfg-model",
+              "name": "model",
+              "value": "GigaChat-2",
+              "type": "string"
+            },
+            {
+              "id": "cfg-scope",
+              "name": "scope",
+              "value": "GIGACHAT_API_PERS",
+              "type": "string"
+            },
+            {
+              "id": "cfg-system",
+              "name": "system_prompt",
+              "value": "SYSTEM PROMPT — Bank Support AI Assistant\n\nROLE\nТы — AI-ассистент службы поддержки онлайн-банка для малого бизнеса.\nТвоя задача: помогать клиентам решать типовые вопросы, отвечать только на основе базы знаний, объяснять простым языком, снижать нагрузку на операторов.\n\nMAIN GOAL\nГлавная цель: быстро, понятно и безопасно помочь клиенту.\nПриоритеты: 1) точность, 2) безопасность, 3) понятность, 4) вежливость, 5) краткость.\nВАЖНО:\nОтвечай только на основе FAQ и базы знаний.\n\nНе используй собственные знания.\nНе придумывай дополнительные советы.\nНе добавляй информацию, которой нет в FAQ.\nНе используй длинные объяснения.\nНе используй эмоциональные фразы.\nПример:\n\nДа, это можно сделать в приложении.\n\n1. Откройте раздел «Карты».\n2. Выберите нужную карту.\n3. Нажмите «Изменить лимит».\n\nИзменения обычно применяются сразу.\n\nCOMMUNICATION STYLE\nДружелюбный тон, профессиональный стиль, простые формулировки, без сложных терминов и лишнего текста.\nНе использовать агрессию, сарказм, шутки, эмоциональное давление.\n\nRESPONSE FORMAT\nВсегда структура:\n1) Краткий ответ.\n2) Пошаговые действия.\n3) Короткое уточнение при необходимости.\n4) Максимум 3–6 предложений.\n\nKNOWLEDGE BASE RULES\nИспользуй только сведения из блока «БАЗА ЗНАНИЙ».\nНе дополняй цифры, тарифы, сроки и условия из головы.\nЕсли информации недостаточно — не выдумывай и переводи на оператора по правилам.\n\nESCALATION\nСтрого следуй правилам эскалации.\nПри мошенничестве, блокировках, спорных операциях, юридических вопросах и отсутствии ответа в FAQ — передавай на оператора.\n\nSAFETY RULES\nНикогда не запрашивай CVV, PIN, полные данные карты, пароли, коды из SMS.\nЕсли пользователь прислал конфиденциальные данные: не повторяй их, попроси удалить сообщение, предупреди о рисках.\n\nLIMITATIONS\nТы не можешь менять данные клиента, выполнять переводы, разблокировать счета, принимать юридические решения, гарантировать возврат средств или точные сроки.\n\nHANDLING UNKNOWN QUESTIONS\nЕсли запрос неясен — задай один уточняющий вопрос.\nЕсли после уточнения ответа в FAQ нет — эскалация.\n\nRESPONSE LENGTH\nОриентир 3–6 предложений. Списки предпочтительнее длинных абзацев.\n\nFINAL INSTRUCTION\nНе придумывай информацию. Безопасность клиента и точность важнее «полезного» но неверного ответа.",
+              "type": "string"
+            },
+            {
+              "id": "cfg-faq",
+              "name": "faq",
+              "value": "FAQ — база знаний\nИспользуй только факты из этого документа. Если ответа здесь нет — не выдумывай: уточни вопрос или предложи оператора (см. `prompts/escalation_rules.md`).\n\n---\n\n# Вопрос: Как восстановить пароль?\n\nОтвет:\n1. Нажмите «Забыли пароль» на экране входа.\n2. Подтвердите номер телефона.\n3. Введите код из SMS.\n4. Создайте новый пароль.\n\nЕсли номер телефона недоступен — обратитесь в поддержку.\n\n---\n\n# Вопрос: Как сменить номер телефона?\n\nОтвет:\n1. Откройте профиль в приложении.\n2. Перейдите в раздел «Настройки».\n3. Выберите «Изменить номер телефона».\n4. Подтвердите изменение кодом из SMS.\n\nЕсли старый номер недоступен — обратитесь в поддержку.\n\n---\n\n# Вопрос: Как заблокировать карту?\n\nОтвет:\n1. Откройте раздел «Карты».\n2. Выберите нужную карту.\n3. Нажмите «Заблокировать».\n\nРазблокировать карту можно в том же разделе.\n\n---\n\n# Вопрос: Как перевести деньги клиенту другого банка?\n\nОтвет:\n1. Перейдите в раздел «Платежи».\n2. Выберите «Перевод по номеру телефона» или «По реквизитам».\n3. Укажите получателя и сумму.\n4. Подтвердите перевод.\n\nКомиссия зависит от типа перевода.\n\n---\n\n# Вопрос: Какая комиссия за перевод?\n\nОтвет:\nРазмер комиссии зависит от тарифа и типа перевода.\n\nПроверить комиссию можно:\n1. В разделе «Тарифы».\n2. Перед подтверждением платежа.\n\n---\n\n# Вопрос: Как скачать выписку по счету?\n\nОтвет:\n1. Откройте раздел «Счета».\n2. Выберите нужный счет.\n3. Нажмите «Выписка».\n4. Укажите период и формат файла.\n\nДокумент можно скачать в PDF или Excel.\n\n---\n\n# Вопрос: Как сменить тариф?\n\nОтвет:\n1. Откройте раздел «Тарифы».\n2. Выберите новый тариф.\n3. Нажмите «Подключить».\n\nИзменения вступят в силу после подтверждения.\n\n---\n\n# Вопрос: Что делать при подозрительном входе?\n\nОтвет:\n1. Смените пароль.\n2. Завершите все активные сессии.\n3. Проверьте историю входов.\n4. Обратитесь в поддержку.\n\nНикому не сообщайте коды из SMS.\n\n---\n\n# Вопрос: Как связаться с оператором?\n\nОтвет:\n1. Откройте чат поддержки.\n2. Напишите ваш вопрос.\n3. При необходимости ассистент переведет диалог на оператора.\n\nПоддержка работает круглосуточно.\n\n---\n\n# Вопрос: Как закрыть счет?\n\nОтвет:\n1. Убедитесь, что на счете нет задолженности.\n2. Выведите остаток средств.\n3. Откройте раздел «Настройки счета».\n4. Нажмите «Закрыть счет».\n\nПосле отправки заявки счет будет проверен.\n\n---\n\n# Вопрос: Как открыть новый счет?\n\nОтвет:\n1. Перейдите в раздел «Счета».\n2. Нажмите «Открыть счет».\n3. Выберите тип счета.\n4. Подтвердите открытие.\n\nРеквизиты появятся сразу после создания счета.\n\n---\n\n# Вопрос: Как посмотреть реквизиты счета?\n\nОтвет:\n1. Откройте нужный счет.\n2. Перейдите в раздел «Реквизиты».\n3. Скопируйте или отправьте данные.\n\nРеквизиты доступны в любое время.\n\n---\n\n# Вопрос: Почему платеж отклонен?\n\nОтвет:\nВозможные причины:\n1. Недостаточно средств.\n2. Превышен лимит.\n3. Ошибка в реквизитах.\n4. Ограничение службы безопасности.\n\nПроверьте данные и повторите попытку.\n\n---\n\n# Вопрос: Как установить лимит по карте?\n\nОтвет:\n1. Откройте раздел «Карты».\n2. Выберите карту.\n3. Перейдите в «Лимиты».\n4. Укажите нужную сумму.\n\nИзменения применяются сразу.\n\n---\n\n# Вопрос: Как выпустить виртуальную карту?\n\nОтвет:\n1. Перейдите в раздел «Карты».\n2. Нажмите «Выпустить карту».\n3. Выберите «Виртуальная карта».\n4. Подтвердите выпуск.\n\nКарта будет доступна сразу после создания.\n\n---\n\n# Вопрос: Как изменить PIN-код карты?\n\nОтвет:\n1. Откройте раздел «Карты».\n2. Выберите нужную карту.\n3. Нажмите «Изменить PIN-код».\n4. Подтвердите изменение.\n\nНовый PIN-код начнет действовать сразу.\n\n---\n\n# Вопрос: Как подключить уведомления?\n\nОтвет:\n1. Перейдите в «Настройки».\n2. Откройте раздел «Уведомления».\n3. Выберите нужные события.\n4. Сохраните изменения.\n\nУведомления доступны в push и SMS.\n\n---\n\n# Вопрос: Как пополнить счет?\n\nОтвет:\n1. Откройте раздел «Пополнение».\n2. Выберите способ пополнения.\n3. Укажите сумму.\n4. Подтвердите операцию.\n\nДеньги обычно поступают сразу.\n\n---\n\n# Вопрос: Как узнать остаток по счету?\n\nОтвет:\nБаланс отображается:\n1. На главном экране приложения.\n2. В разделе «Счета».\n\nОбновление происходит автоматически.\n\n---\n\n# Вопрос: Как отменить платеж?\n\nОтвет:\n1. Откройте историю операций.\n2. Выберите нужный платеж.\n3. Нажмите «Отменить», если кнопка доступна.\n\nНекоторые платежи отменить невозможно после обработки.\n\n---\n\n# Вопрос: Как загрузить документы для проверки?\n\nОтвет:\n1. Перейдите в раздел «Документы».\n2. Нажмите «Загрузить файл».\n3. Выберите нужный документ.\n4. Подтвердите отправку.\n\nПоддерживаются PDF и фото.\n\n---\n\n# Вопрос: Как посмотреть историю операций?\n\nОтвет:\n1. Откройте нужный счет.\n2. Перейдите в раздел «История операций».\n\nМожно использовать поиск и фильтры.\n\n---\n\n# Вопрос: Что делать, если карта потеряна?\n\nОтвет:\n1. Сразу заблокируйте карту.\n2. Проверьте последние операции.\n3. Выпустите новую карту в приложении.\n\nЕсли заметили подозрительные списания — обратитесь в поддержку.\n\n---\n\n# Вопрос: Как подключить СБП?\n\nОтвет:\n1. Откройте «Настройки».\n2. Перейдите в раздел СБП.\n3. Включите переводы и подтверждение.\n\nПосле подключения переводы будут доступны.\n\n---\n\n# Вопрос: Как изменить email?\n\nОтвет:\n1. Откройте профиль.\n2. Перейдите в «Контакты».\n3. Укажите новый email.\n4. Подтвердите изменение.\n\nНа новый адрес придет письмо для подтверждения.\n\n---\n\n# Вопрос: Как получить справку по счету?\n\nОтвет:\n1. Перейдите в раздел «Документы».\n2. Выберите «Справки».\n3. Укажите тип справки.\n4. Скачайте готовый файл.\n\nНекоторые справки формируются автоматически.\n\n---\n\n# Вопрос: Почему аккаунт заблокирован?\n\nОтвет:\nАккаунт может быть заблокирован:\n1. Из-за подозрительной активности.\n2. После нескольких неверных попыток входа.\n3. По требованиям безопасности.\n\nДля восстановления доступа обратитесь в поддержку.\n\n---\n\n# Вопрос: Как настроить двухфакторную авторизацию?\n\nОтвет:\n1. Откройте «Безопасность».\n2. Включите двухфакторную защиту.\n3. Подтвердите номер телефона.\n4. Введите код из SMS.\n\nЭто поможет защитить аккаунт от взлома.\n\n---\n\n# Вопрос: Как обновить паспортные данные?\n\nОтвет:\n1. Перейдите в профиль.\n2. Откройте раздел «Документы».\n3. Загрузите новые данные.\n4. Подтвердите отправку.\n\nПроверка обычно занимает несколько часов.\n\n---\n\n# Вопрос: Как посмотреть тарифы и условия?\n\nОтвет:\n1. Откройте раздел «Тарифы».\n2. Выберите интересующий тариф.\n3. Ознакомьтесь с условиями обслуживания.\n\nОсновные комиссии отображаются сразу.\n",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "0ba23717-3f14-4ef5-8c3d-241016f97688",
+      "name": "04 Load Config",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        464,
+        -80
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://ngw.devices.sberbank.ru:9443/api/v2/oauth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/x-www-form-urlencoded"
+            },
+            {
+              "name": "RqUID",
+              "value": "=12345678-1234-1234-1234-123456789012"
+            },
+            {
+              "name": "Authorization",
+              "value": "Basic YOUR_GIGACHAT_AUTH_KEY"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "form-urlencoded",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "scope",
+              "value": "GIGACHAT_API_PERS"
+            }
+          ]
+        },
+        "options": {
+          "allowUnauthorizedCerts": true
+        }
+      },
+      "id": "d32bbc70-0b7c-4742-83f6-7630b770b158",
+      "name": "05 GigaChat OAuth",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        688,
+        -80
+      ],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const prep = $(\"02 Prepare Input\").first().json;\nconst config = $(\"04 Load Config\").first().json;\nconst oauth = $input.first().json;\nconst token = oauth.access_token;\nif (!token) {\n  return [{\n    json: {\n      error: true,\n      chatId: prep.chatId,\n      oauthResponse: oauth\n    }\n  }];\n}\nconst fullPrompt = config.system_prompt + \"\\n\\nБАЗА ЗНАНИЙ:\\n\" + config.faq;\nreturn [{\n  json: {\n    error: false,\n    chatId: prep.chatId,\n    access_token: token,\n    gigachatPayload: {\n      model: config.model,\n      messages: [\n        { role: \"system\", content: fullPrompt },\n        { role: \"user\", content: prep.userText }\n      ],\n      temperature: 0.2,\n      max_tokens: 1200,\n      stream: false,\n      function_call: \"none\"\n    }\n  }\n}];"
+      },
+      "id": "cb3e47c5-95ee-41aa-b2ac-6edae234e101",
+      "name": "06 Assemble Request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        912,
+        -80
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "cond-oauth-failed",
+              "leftValue": "={{ $json.error }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "468f3549-2201-462f-a10c-ab3db4d3c171",
+      "name": "07 OAuth Failed?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1136,
+        -80
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.chatId }}",
+        "text": "Извините, сервис временно недоступен. Попробуйте позже.",
+        "additionalFields": {}
+      },
+      "id": "520cea2e-f0da-4ddd-932d-862bfc453a7f",
+      "name": "07b Reply OAuth Error",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1360,
+        16
+      ],
+      "webhookId": "40c51a95-d9b1-433e-b409-e8b4d7d6636c",
+      "credentials": {
+        "telegramApi": {
+          "id": "SzweVMNUrk9Y6Yc2",
+          "name": "Telegram account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://gigachat.devices.sberbank.ru/api/v1/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{$json[\"access_token\"]}}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"GigaChat\",\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"ТВОЙ SYSTEM PROMPT\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"{{$node[\"01 Telegram Trigger\"].json[\"message\"][\"text\"]}}\"\n    }\n  ],\n  \"temperature\": 0.3\n}",
+        "options": {
+          "allowUnauthorizedCerts": true
+        }
+      },
+      "id": "fc1673c0-9219-4312-978a-96e83f73babf",
+      "name": "08 Call GigaChat",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1360,
+        -176
+      ],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const prep = $(\"02 Prepare Input\").first().json;\nconst gigachat = $input.first().json;\nconst aiText = gigachat.choices?.[0]?.message?.content || \"Извините, не удалось получить ответ.\";\nreturn [{\n  json: {\n    chatId: prep.chatId,\n    aiText\n  }\n}];"
+      },
+      "id": "32822b11-9a9b-4dde-8ec4-26b0653aca24",
+      "name": "09 Extract Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1584,
+        -176
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.chatId }}",
+        "text": "={{ $json.aiText }}",
+        "additionalFields": {}
+      },
+      "id": "49baed0c-2e1a-4e4f-b78d-18c383d853b9",
+      "name": "10 Reply with AI",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1808,
+        -176
+      ],
+      "webhookId": "5c451ccb-0a26-4660-b26a-c8c3f60ed5db",
+      "credentials": {
+        "telegramApi": {
+          "id": "SzweVMNUrk9Y6Yc2",
+          "name": "Telegram account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $(\"02 Prepare Input\").item.json.chatId }}",
+        "text": "Пожалуйста, отправьте текстовое сообщение — так я смогу помочь по типовым вопросам.",
+        "additionalFields": {}
+      },
+      "id": "de2b2e2b-4189-45a2-a299-3123c59feef2",
+      "name": "03b Reply Need Text",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        464,
+        112
+      ],
+      "webhookId": "86eddf02-8d8d-41fa-a988-a5f0d19aeafa",
+      "credentials": {
+        "telegramApi": {
+          "id": "SzweVMNUrk9Y6Yc2",
+          "name": "Telegram account 3"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "01 Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "02 Prepare Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "02 Prepare Input": {
+      "main": [
+        [
+          {
+            "node": "03 Validate Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "03 Validate Text": {
+      "main": [
+        [
+          {
+            "node": "04 Load Config",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "03b Reply Need Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "04 Load Config": {
+      "main": [
+        [
+          {
+            "node": "05 GigaChat OAuth",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "05 GigaChat OAuth": {
+      "main": [
+        [
+          {
+            "node": "06 Assemble Request",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "06 Assemble Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "06 Assemble Request": {
+      "main": [
+        [
+          {
+            "node": "07 OAuth Failed?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "07 OAuth Failed?": {
+      "main": [
+        [
+          {
+            "node": "07b Reply OAuth Error",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "08 Call GigaChat",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "08 Call GigaChat": {
+      "main": [
+        [
+          {
+            "node": "09 Extract Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "09 Extract Response": {
+      "main": [
+        [
+          {
+            "node": "10 Reply with AI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "e42a79a4-0900-4570-9c6e-0932df86e201",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "083064996bf2baab96456054171c624c7f4f48d939c167b5269e44225b50ce75"
+  },
+  "id": "gyWiw8F5PsDK4Jac",
+  "tags": []
+}
